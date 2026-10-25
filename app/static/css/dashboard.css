@@ -1,0 +1,179 @@
+/* Dashboard & Lobby Specific Styling */
+
+.stat-tile {
+  background: rgba(13, 35, 74, 0.6);
+  border: 1px solid rgba(245, 184, 65, 0.2);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: var(--transition);
+}
+
+.stat-tile:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  background: rgba(13, 35, 74, 0.85);
+}
+
+.stat-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, rgba(245, 184, 65, 0.2), rgba(255, 122, 0, 0.2));
+  color: var(--gold);
+  border: 1px solid rgba(245, 184, 65, 0.4);
+}
+
+.stat-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--text-white);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Franchise Cards (Team Selection & Lobby) */
+.franchise-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(13, 35, 74, 0.7);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.franchise-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+.franchise-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(245, 184, 65, 0.4);
+}
+
+.franchise-card.taken {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
+
+.franchise-header {
+  padding: 1.25rem 1.25rem 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.team-logo-badge {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.team-code-pill {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Lobby Participant Chips */
+.participant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  border-radius: 12px;
+  background: rgba(7, 26, 54, 0.6);
+  border: 1px solid rgba(245, 184, 65, 0.15);
+  margin-bottom: 0.75rem;
+  transition: var(--transition);
+}
+
+.participant-item:hover {
+  background: rgba(13, 35, 74, 0.8);
+  border-color: rgba(245, 184, 65, 0.4);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.ready {
+  background-color: var(--pitch-green);
+  box-shadow: 0 0 8px var(--pitch-green);
+}
+
+.status-dot.not-ready {
+  background-color: #EF4444;
+}
+
+/* Player Database Cards */
+.player-card {
+  background: rgba(13, 35, 74, 0.75);
+  border: 1px solid rgba(245, 184, 65, 0.2);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: var(--transition);
+}
+
+.player-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.player-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(7, 26, 54, 0.9);
+  border: 2px solid var(--gold);
+  padding: 4px;
+  object-fit: cover;
+}
+
+.player-rating-circle {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: linear-gradient(135deg, #114297, #071A36);
+  border: 1px solid var(--gold);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--gold);
+}

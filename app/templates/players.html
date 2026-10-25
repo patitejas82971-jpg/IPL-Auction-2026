@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Player Database Explorer - IPL Auction Simulator{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <!-- Explorer Header -->
+  <div class="glass-card p-4 mb-4 border-warning">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h2 class="text-white fw-bold mb-1">
+          <i class="fa-solid fa-users text-warning me-2"></i>IPL Player Database
+        </h2>
+        <p class="text-muted small mb-0">Browse and analyze {{ total }} elite cricket superstars across all categories</p>
+      </div>
+
+      <div class="badge bg-dark border border-warning text-warning fs-6 px-3 py-2">
+        Total Players: {{ total }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="glass-card p-3 mb-4">
+    <form method="GET" action="{{ url_for('player.players_page') }}" class="row g-2 align-items-center">
+      <!-- Search input -->
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-dark border-secondary text-warning">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input type="text" class="form-control" name="q" placeholder="Search by player name..." value="{{ search_query }}">
+        </div>
+      </div>
+
+      <!-- Role Filter -->
+      <div class="col-6 col-md-2">
+        <select class="form-select" name="role">
+          <option value="All" {% if selected_role == 'All' %}selected{% endif %}>All Roles</option>
+          <option value="Batsman" {% if selected_role == 'Batsman' %}selected{% endif %}>Batsmen</option>
+          <option value="Bowler" {% if selected_role == 'Bowler' %}selected{% endif %}>Bowlers</option>
+          <option value="All-rounder" {% if selected_role == 'All-rounder' %}selected{% endif %}>All-rounders</option>
+          <option value="Wicketkeeper" {% if selected_role == 'Wicketkeeper' %}selected{% endif %}>Wicketkeepers</option>
+        </select>
+      </div>
+
+      <!-- Country Filter -->
+      <div class="col-6 col-md-2">
+        <select class="form-select" name="country">
+          <option value="All" {% if selected_country == 'All' %}selected{% endif %}>All Nations</option>
+          {% for c in countries %}
+            <option value="{{ c }}" {% if selected_country == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Overseas Check -->
+      <div class="col-auto">
+        <div class="form-check form-switch pt-2">
+          <input class="form-check-input" type="checkbox" name="overseas" value="true" id="checkOverseas" {% if request.args.get('overseas') == 'true' %}checked{% endif %}>
+          <label class="form-check-label text-light small" for="checkOverseas">Overseas Only</label>
+        </div>
+      </div>
+
+      <!-- Uncapped Check -->
+      <div class="col-auto">
+        <div class="form-check form-switch pt-2">
+          <input class="form-check-input" type="checkbox" name="uncapped" value="true" id="checkUncapped" {% if request.args.get('uncapped') == 'true' %}checked{% endif %}>
+          <label class="form-check-label text-light small" for="checkUncapped">Uncapped</label>
+        </div>
+      </div>
+
+      <!-- Submit Filter -->
+      <div class="col-auto ms-auto">
+        <button type="submit" class="btn btn-gold px-4">
+          <i class="fa-solid fa-filter me-1"></i> Filter
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Players Cards Grid -->
+  <div class="row g-3 mb-4">
+    {% for p in players %}
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="player-card h-100">
+          <div class="player-rating-circle">{{ p.rating }}</div>
+
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="{{ p.image_url }}" alt="{{ p.name }}" class="player-avatar" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ p.name|replace(' ', '_') }}&backgroundColor=071a36';">
+            <div>
+              <h5 class="fw-bold text-white mb-0 text-truncate" style="max-width: 140px;" title="{{ p.name }}">{{ p.name }}</h5>
+              <div class="text-muted small">
+                {% if p.is_overseas %}
+                  <span class="text-warning"><i class="fa-solid fa-earth-americas me-1"></i> {{ p.country }}</span>
+                {% else %}
+                  <span><i class="fa-solid fa-flag me-1"></i> {{ p.country }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-1 mb-2">
+            <span class="badge badge-role badge-{{ p.role|lower|replace(' ', '')|replace('-', '') }}">{{ p.role }}</span>
+            {% if p.is_uncapped %}
+              <span class="badge bg-secondary">Uncapped</span>
+            {% endif %}
+          </div>
+
+          <div class="small text-muted mb-3 flex-grow-1" style="font-size: 0.8rem;">
+            <div><i class="fa-solid fa-baseball text-secondary me-1"></i> {{ p.batting_style }}</div>
+            <div><i class="fa-solid fa-bowling-ball text-secondary me-1"></i> {{ p.bowling_style }}</div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary mt-auto">
+            <span class="text-muted small">Base Price:</span>
+            <span class="text-warning fw-bold">{{ p.base_price_formatted }}</span>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-12 text-center py-5">
+        <i class="fa-solid fa-user-xmark fs-1 text-muted mb-3"></i>
+        <h4 class="text-white">No players found matching your criteria</h4>
+        <p class="text-muted small">Try adjusting your filters or search term.</p>
+        <a href="{{ url_for('player.players_page') }}" class="btn btn-outline-gold mt-2">Reset Filters</a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if pages > 1 %}
+    <nav class="d-flex justify-content-center" aria-label="Player database navigation">
+      <ul class="pagination flex-wrap justify-content-center">
+        <li class="page-item {% if not has_prev %}disabled{% endif %}">
+          <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('player.players_page', page=current_page-1, role=selected_role, country=selected_country, q=search_query, overseas=request.args.get('overseas'), uncapped=request.args.get('uncapped')) }}">
+            <i class="fa-solid fa-chevron-left me-1"></i> Prev
+          </a>
+        </li>
+        {% for p in range(1, pages + 1) %}
+          {% if p == 1 or p == pages or (p >= current_page - 2 and p <= current_page + 2) %}
+            <li class="page-item {% if p == current_page %}active{% endif %}">
+              <a class="page-link {% if p == current_page %}bg-warning text-dark border-warning fw-bold{% else %}bg-dark text-white border-secondary{% endif %}" 
+                 href="{{ url_for('player.players_page', page=p, role=selected_role, country=selected_country, q=search_query, overseas=request.args.get('overseas'), uncapped=request.args.get('uncapped')) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% elif p == current_page - 3 or p == current_page + 3 %}
+            <li class="page-item disabled">
+              <span class="page-link bg-dark text-muted border-secondary">...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not has_next %}disabled{% endif %}">
+          <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('player.players_page', page=current_page+1, role=selected_role, country=selected_country, q=search_query, overseas=request.args.get('overseas'), uncapped=request.args.get('uncapped')) }}">
+            Next <i class="fa-solid fa-chevron-right ms-1"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}
