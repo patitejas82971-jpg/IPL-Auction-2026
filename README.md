@@ -11,6 +11,7 @@ A full-featured, real-time **IPL Auction Simulator** web application built with 
 - **🏏 Authentic IPL Experience**: Official 10 IPL franchises, player categories (Batsmen, Bowlers, All-rounders, Wicketkeepers), overseas limits, and salary purse tracking (₹100 Cr+).
 - **📊 Team Dashboard & Roster**: Track your squad's purse balance, overseas player counts, role breakdowns, and bench strength in real-time.
 - **🔒 Authentication**: Secure user registration, login, and session management with Flask-Login.
+- **📱 Android Mobile App**: Complete Android client with Material 3 dark styling, real-time live bidding, native haptic feedback, offline fallback, and in-app server configuration.
 - **🎨 Modern Dark UI**: Sleek, responsive, cricket-themed dark design crafted with custom CSS and dynamic UI elements.
 
 ---
@@ -90,6 +91,7 @@ pytest
 
 ```text
 IPL-Auction/
+├── android/             # Android mobile app (Kotlin, Material 3, WebView Bridge)
 ├── app/
 │   ├── models/          # SQLAlchemy database models (User, Team, Player, Bid)
 │   ├── routes/          # Flask blueprints (auth, auction, team, player, ai)

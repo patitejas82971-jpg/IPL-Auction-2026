@@ -51,6 +51,9 @@ class AuctionAudio {
 
   // Sound 1: Bid Placed Ding
   playBidSound() {
+    if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+      try { window.AndroidBridge.vibrate(35); } catch (e) {}
+    }
     if (this.isMuted || !this.ctx) return;
     this.resume();
     const osc = this.ctx.createOscillator();
@@ -68,6 +71,9 @@ class AuctionAudio {
 
   // Sound 2: Player Sold (Gavel Knock & Celebration Chime)
   playSoldSound() {
+    if (window.AndroidBridge && typeof window.AndroidBridge.onPlayerSold === 'function') {
+      try { window.AndroidBridge.onPlayerSold("", ""); } catch (e) {}
+    }
     if (this.isMuted || !this.ctx) return;
     this.resume();
     // Gavel knock
@@ -201,6 +207,9 @@ function fallbackCopyText(text, successMessage) {
 
 // Toast notification helper
 function showToast(message, type = "info") {
+  if (window.AndroidBridge && typeof window.AndroidBridge.showToast === 'function') {
+    try { window.AndroidBridge.showToast(message); } catch (e) {}
+  }
   const container = document.getElementById("toastContainer");
   if (!container) return;
 
