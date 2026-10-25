@@ -22,6 +22,10 @@ def create_app(config_name=None):
     migrate.init_app(flask_app, db)
     login_manager.init_app(flask_app)
     cors.init_app(flask_app)
+
+    # Trust X-Forwarded-* headers when behind reverse proxies (Vercel, Render, Cloudflare)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    flask_app.wsgi_app = ProxyFix(flask_app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     # Initialize SocketIO with cross-origin support and threading/simple_websocket
     socketio.init_app(flask_app, cors_allowed_origins="*", async_mode="threading")

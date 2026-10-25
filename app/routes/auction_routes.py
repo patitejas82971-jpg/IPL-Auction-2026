@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 import json
 import csv
 import io
-from app.extensions import db
+from app.extensions import db, socketio, utc_now
 from app.models.auction import AuctionRoom, AuctionPlayer
 from app.models.team import Team, TeamSquad
 from app.models.player import Player, format_inr
@@ -14,8 +14,14 @@ from app.services.auction_service import (
     start_auction_service,
     pause_auction_service,
     resume_auction_service,
+    advance_to_next_player,
     get_auction_results_summary,
     load_franchise_data
+)
+from app.services.bidding_service import (
+    validate_and_place_bid,
+    finalize_current_player,
+    get_next_bid_amount
 )
 
 auction_bp = Blueprint("auction", __name__)
@@ -344,3 +350,143 @@ def api_auction_results(auction_id):
     if not summary:
         return jsonify({"success": False, "message": "Room not found"}), 404
     return jsonify({"success": True, "results": summary})
+
+
+# Live Auction Full State REST API (For polling fallback when WebSockets are unavailable e.g. on Vercel)
+@auction_bp.route("/api/auctions/<int:auction_id>/state", methods=["GET"])
+def api_auction_state(auction_id):
+    room = db.session.get(AuctionRoom, auction_id)
+    if not room:
+        return jsonify({"success": False, "message": "Room not found"}), 404
+
+    now = utc_now()
+    seconds_left = 0
+    if room.status == "active" and room.bid_deadline:
+        if room.bid_deadline > now:
+            seconds_left = max(0, int((room.bid_deadline - now).total_seconds()))
+        else:
+            # Deadline expired: serverless auto-finalization if still active
+            seconds_left = 0
+            if room.current_player_id:
+                try:
+                    is_sold, res = finalize_current_player(room.id)
+                    advance_to_next_player(room.id)
+                    db.session.commit()
+                except Exception as e:
+                    print(f"Serverless auto-finalize error: {e}")
+
+    elif room.status == "paused" and room.timer_paused_remaining:
+        seconds_left = room.timer_paused_remaining
+
+    current_player = room.current_player
+    base_price = current_player.base_price if current_player else 0
+    next_bid = get_next_bid_amount(room.current_highest_bid, base_price)
+
+    # User's team in this room
+    my_team = None
+    if current_user.is_authenticated:
+        t = Team.query.filter_by(auction_id=auction_id, owner_id=current_user.id).first()
+        if t:
+            my_team = t.to_dict()
+
+    recent_bids = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.id.desc()).limit(15).all()
+
+    return jsonify({
+        "success": True,
+        "status": room.status,
+        "room_id": room.id,
+        "room_name": room.room_name,
+        "room_code": room.room_code,
+        "is_host": current_user.is_authenticated and (room.host_id == current_user.id),
+        "current_player": current_player.to_dict() if current_player else None,
+        "current_highest_bid": room.current_highest_bid,
+        "current_highest_bid_formatted": format_inr(room.current_highest_bid),
+        "current_highest_team": room.highest_bidding_team.to_dict() if room.highest_bidding_team else None,
+        "next_bid": next_bid,
+        "next_bid_formatted": format_inr(next_bid),
+        "seconds_left": seconds_left,
+        "my_team": my_team,
+        "teams": [t.to_dict() for t in room.teams],
+        "recent_bids": [b.to_dict() for b in recent_bids]
+    })
+
+
+# Live Bid Submission via REST (Works seamlessly when WebSockets are unavailable)
+@auction_bp.route("/api/auctions/<int:auction_id>/bid", methods=["POST"])
+@login_required
+def api_place_bid(auction_id):
+    data = request.get_json() or {}
+    custom_amount = data.get("amount")
+
+    success, message, bid_data = validate_and_place_bid(auction_id, current_user.id, custom_amount)
+    if not success:
+        return jsonify({"success": False, "message": message}), 400
+
+    # Also notify any active WebSocket clients
+    try:
+        socketio.emit("bid_updated", bid_data, room=f"auction_{auction_id}")
+    except Exception:
+        pass
+
+    return jsonify({"success": True, "message": message, "bid": bid_data})
+
+
+# Host Hammer (Sold) via REST
+@auction_bp.route("/api/auctions/<int:auction_id>/hammer", methods=["POST"])
+@login_required
+def api_host_hammer(auction_id):
+    room = db.session.get(AuctionRoom, auction_id)
+    if not room or room.host_id != current_user.id:
+        return jsonify({"success": False, "message": "Only the host can strike the hammer."}), 403
+
+    is_sold, result_data = finalize_current_player(room.id)
+    advance_to_next_player(room.id)
+    db.session.commit()
+
+    try:
+        channel = f"auction_{room.id}"
+        event_name = "player_sold" if is_sold else "player_unsold"
+        socketio.emit(event_name, result_data, room=channel)
+    except Exception:
+        pass
+
+    return jsonify({"success": True, "is_sold": is_sold, "result": result_data})
+
+
+# Host Unsold via REST
+@auction_bp.route("/api/auctions/<int:auction_id>/unsold", methods=["POST"])
+@login_required
+def api_host_unsold(auction_id):
+    room = db.session.get(AuctionRoom, auction_id)
+    if not room or room.host_id != current_user.id:
+        return jsonify({"success": False, "message": "Only the host can pass players."}), 403
+
+    room.current_highest_bid = 0
+    room.current_highest_team_id = None
+    db.session.commit()
+
+    is_sold, result_data = finalize_current_player(room.id)
+    advance_to_next_player(room.id)
+    db.session.commit()
+
+    try:
+        socketio.emit("player_unsold", result_data, room=f"auction_{room.id}")
+    except Exception:
+        pass
+
+    return jsonify({"success": True, "result": result_data})
+
+
+# Host Skip via REST
+@auction_bp.route("/api/auctions/<int:auction_id>/skip", methods=["POST"])
+@login_required
+def api_host_skip(auction_id):
+    room = db.session.get(AuctionRoom, auction_id)
+    if not room or room.host_id != current_user.id:
+        return jsonify({"success": False, "message": "Only the host can skip players."}), 403
+
+    next_ap = advance_to_next_player(room.id)
+    db.session.commit()
+
+    return jsonify({"success": True, "current_player": next_ap.player.to_dict() if next_ap and next_ap.player else None})
+
