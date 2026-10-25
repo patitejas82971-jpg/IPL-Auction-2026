@@ -32,9 +32,13 @@
   <nav class="navbar navbar-expand-lg navbar-ipl sticky-top">
     <div class="container-fluid px-lg-4">
       <a class="navbar-brand" href="{{ url_for('auction.index') }}">
-        <span class="fs-4"><i class="fa-solid fa-trophy text-warning"></i></span>
-        <span>IPL <span style="color: var(--gold);">AUCTION</span></span>
-        <span class="brand-badge">2026 LIVE</span>
+        <div class="brand-icon-shield">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div>
+          <span>IPL <span class="text-gradient-gold">AUCTION</span></span>
+          <span class="brand-badge ms-1">2026 LIVE</span>
+        </div>
       </a>
       
       <button class="navbar-toggler text-white border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,29 +50,29 @@
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'auction.dashboard' %}active{% endif %}" href="{{ url_for('auction.dashboard') }}">
-                <i class="fa-solid fa-gauge-high me-1"></i> Dashboard
+                <i class="fa-solid fa-gauge-high me-1 text-gold"></i> Dashboard
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'auction.create_auction' %}active{% endif %}" href="{{ url_for('auction.create_auction') }}">
-                <i class="fa-solid fa-plus-circle me-1"></i> Create Room
+                <i class="fa-solid fa-plus-circle me-1 text-gold"></i> Create Room
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'auction.join_auction' %}active{% endif %}" href="{{ url_for('auction.join_auction') }}">
-                <i class="fa-solid fa-right-to-bracket me-1"></i> Join Room
+                <i class="fa-solid fa-right-to-bracket me-1 text-cyan"></i> Join Room
               </a>
             </li>
           {% endif %}
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint == 'player.players_page' %}active{% endif %}" href="{{ url_for('player.players_page') }}">
-              <i class="fa-solid fa-users me-1"></i> Players Pool
+              <i class="fa-solid fa-users me-1 text-info"></i> Players Pool
             </a>
           </li>
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'auction.history' %}active{% endif %}" href="{{ url_for('auction.history') }}">
-                <i class="fa-solid fa-clock-rotate-left me-1"></i> History
+                <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i> History
               </a>
             </li>
           {% endif %}
@@ -76,9 +80,15 @@
 
         <!-- Right Side Nav Tools -->
         <div class="d-flex align-items-center gap-2">
+          <!-- Server Status Indicator -->
+          <div class="d-none d-md-flex align-items-center gap-2 px-2 py-1 rounded-pill bg-dark border border-secondary me-2">
+            <span class="status-dot ready"></span>
+            <span class="small text-muted fw-semibold">Live Server</span>
+          </div>
+
           <!-- Audio Toggle Button -->
           <button id="soundToggleBtn" class="btn btn-stadium px-3 py-2" title="Toggle Auction Sound Effects" aria-label="Toggle Sound Effects">
-            <i class="fa-solid fa-volume-high"></i>
+            <i class="fa-solid fa-volume-high text-gold"></i>
           </button>
 
           {% if current_user.is_authenticated %}
@@ -114,6 +124,24 @@
       </div>
     </div>
   </nav>
+
+  <!-- Broadcast Ticker Tape -->
+  <div class="auction-ticker-bar py-1 d-none d-sm-block">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <span class="ticker-item"><i class="fa-solid fa-circle text-danger fs-6 pulse-gold"></i> MEGA AUCTION 2026</span>
+        <span class="ticker-item text-muted">•</span>
+        <span class="ticker-item"><i class="fa-solid fa-shield-halved text-gold"></i> 10 FRANCHISES</span>
+        <span class="ticker-item text-muted">•</span>
+        <span class="ticker-item"><i class="fa-solid fa-coins text-warning"></i> ₹120 CR SALARY PURSE</span>
+        <span class="ticker-item text-muted">•</span>
+        <span class="ticker-item"><i class="fa-solid fa-bolt text-cyan"></i> LIVE SYNCHRONIZED BIDDING</span>
+      </div>
+      <div class="small text-muted d-none d-md-block">
+        <i class="fa-solid fa-robot text-gold me-1"></i> AI Powered by Gemini
+      </div>
+    </div>
+  </div>
 
   <!-- Flash Alerts Container -->
   <div class="container mt-3">

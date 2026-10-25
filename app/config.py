@@ -9,15 +9,18 @@ BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "ipl-super-secret-dev-key-change-in-production")
     
-    # Handle Database URL: remote Postgres if provided, writable /tmp for Vercel, or local SQLite
     database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        if os.getenv("VERCEL"):
+    if os.getenv("VERCEL"):
+        # On Vercel, the lambda filesystem is strictly read-only except for /tmp
+        if not database_url or database_url.startswith("sqlite"):
             database_url = "sqlite:////tmp/ipl_auction.db"
-        else:
+        elif database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+    else:
+        if not database_url:
             database_url = f"sqlite:///{os.path.join(BASE_DIR, 'ipl_auction.db')}"
-    elif database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        elif database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
         
     SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
