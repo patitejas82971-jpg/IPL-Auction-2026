@@ -2,6 +2,8 @@
 
 A full-featured, real-time **IPL Auction Simulator** web application built with **Flask**, **Flask-SocketIO**, **SQLAlchemy**, and **Google Gemini AI**. Experience the thrill of the Indian Premier League mega-auction with live bidding, authoritative countdown timers, interactive squad management, and AI-powered bidding intelligence.
 
+IPL Auction 2026 is a real-time multiplayer cricket auction app where friends can create teams, bid on players, manage budgets, and compete in IPL-style auctions.
+
 ---
 
 ## 🌟 Key Features
