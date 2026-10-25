@@ -71,8 +71,8 @@ def create_app(config_name=None):
         except Exception as e:
             print(f"Database init warning: {e}")
 
-        # Start authoritative background auction timer (non-testing)
-        if not flask_app.config.get("TESTING"):
+        # Start authoritative background auction timer (non-testing and non-serverless)
+        if not flask_app.config.get("TESTING") and not os.getenv("VERCEL"):
             start_timer_service(flask_app)
 
     return flask_app
